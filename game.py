@@ -1,85 +1,74 @@
-import math
 import random
 
-# Функция, которая определяет, является ли текущее значение конечным состоянием игры
-def is_terminal_state(current_value):
-    return current_value == 0
+class Player:
+    game_score = random.randint(25,50)
+    def __init__(self, name) -> None:
+        self.name = name
+        self.previus_action = -1
 
-# Функция, которая возвращает список возможных действий для текущего состояния игры
-def get_possible_actions(current_value):
-    actions = []
-    if current_value % 2 == 0:
-        actions.append(current_value // 2)
-    actions.append(current_value - 2)
-    actions.append(current_value + 2)
-    return actions
 
-# Функция, которая вычисляет минимальную стоимость для компьютера
-def min_value(current_value, alpha, beta, depth):
-    if is_terminal_state(current_value):
-        return 0
-    min_val = math.inf
-    for action in get_possible_actions(current_value):
-        val = max_value(action, alpha, beta, depth - 1)
-        min_val = min(min_val, val)
-        beta = min(beta, val)
-        if beta <= alpha:
-            break
-    return min_val
+    def make_move(self,action):
+        self.previus_action = action
+        if action == 0:
+            Player.game_score //= 2
+        elif action == 1:
+            Player.game_score += 2
+        elif action == 3:
+            Player.game_score -= 2
+        
 
-# Функция, которая вычисляет максимальную стоимость для игрока
-def max_value(current_value, alpha, beta, depth):
-    if is_terminal_state(current_value):
-        return 0
+
+class AI(Player):
+    def make_move(self):
+        pass
+
+class Human(Player):
+    def __init__(self, name) -> None:
+        super().__init__(name)
+
+    def make_move(self):
+        print(self.name + " Твой ход!")
+        action = -1
+        while action < 0 or action > 2:
+            try:
+                action = int(input("Выбери действие(0 - Делить на 2, 1 - Плюс 2, 2 - Минус 2): "))
+            except Exception as e:
+                pass
+        super().make_move(action)
+
+class Game:
+    def __init__(self) -> None:
+        self.players = [Human("player 1"), Human("player 2")]
+
+
     
-    max_val = -math.inf
-    for action in get_possible_actions(current_value):
-        val = min_value(action, alpha, beta, depth - 1)
-        max_val = max(max_val, val)
-        alpha = max(alpha, val)
-        if beta <= alpha:
-            break
-    return max_val
+    def play(self):
+        flag = True
 
-# Функция, которая выбирает лучшее действие для компьютера с помощью минимакс алгоритма
-def computer_turn(current_value):
-    print("Ход компьютера!")
-    # print("Текущее значение: ", current_value)
-    best_action = None
-    best_score = -math.inf
-    for action in get_possible_actions(current_value):
-        score = min_value(action, -math.inf, math.inf, 3) # Глубина поиска = 3
-        if score > best_score:
-            best_score = score
-            best_action = action
-    current_value = best_action
-    # print("Компьютер выбрал значение: ", current_value)
-    return current_value
+        current_player = self.players[0]
+        second_player = self.players[1]
 
-# Функция, которая запускает игру
-def play_game():
-    print("Начало игры!")
-    current_value = random.randint(20, 30) # Случайное число от 20 до 30
-    print("Загаданное число: ", current_value)
-    while current_value != 0:
-        choice = input("Ваш ход! Выберите операцию: деление на 2 (1), вычитание 2 (2), прибавление 2 (3): ")
-        if choice == "1":
-            current_value //= 2
-        elif choice == "2":
-            current_value -= 2
-        elif choice == "3":
-            current_value += 2
-        else:
-            print("Неправильный выбор! Попробуйте еще раз.")
-            continue
-        print("Текущее значение: ", current_value)
-        if current_value == 0:
-            print("Вы выиграли!")
-            break
-        current_value = computer_turn(current_value)
-        print("Текущее значение: ", current_value)
-        if current_value == 0:
-            print("Компьютер выиграл!")
-            break
 
-play_game()
+        while flag:
+            
+            print(current_player.previus_action)
+
+
+            if (current_player.previus_action != -1):
+                if (current_player.previus_action == second_player.previus_action) :
+                    print("Нельзя использовать эту команду дважды!")
+                    continue
+
+            
+            print("Игровой счёт: " + str(Player.game_score) + "\n")
+            current_player.make_move()
+
+            if Player.game_score == 0:
+                flag = False
+                break
+
+            current_player, second_player = second_player, current_player
+
+        print(current_player.name + " Ты выйграл!!!")
+        
+Game().play()

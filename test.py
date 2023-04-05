@@ -1,3 +1,6 @@
+import sys
+
+
 class Player:
     def __init__(self, name, number):
         self.name = name
@@ -32,7 +35,7 @@ class HumanPlayer(Player):
 
 
 class ComputerPlayer(Player):
-    def minimax(self, depth, is_max):
+    def minimax(self,depth, is_max):
         if depth == 0 or self.value == 0:
             return self.value
 
@@ -40,16 +43,16 @@ class ComputerPlayer(Player):
             best_value = float('-inf')
             for action in ["div2", "add2", "sub2"]:
                 super().make_move(action)
-                value = self.minimax(depth - 1, False)
-                super().make_move(self.opposite_action(action))
+                value = self.minimax(depth -1,False)
+                # super().make_move(self.opposite_action(action))
                 best_value = max(best_value, value)
             return best_value
         else:
             best_value = float('inf')
             for action in ["div2", "add2", "sub2"]:
                 super().make_move(action)
-                value = self.minimax(depth - 1, True)
-                super().make_move(self.opposite_action(action))
+                value = self.minimax(depth -1,True)
+                # super().make_move(self.opposite_action(action))
                 best_value = min(best_value, value)
             return best_value
 
@@ -66,7 +69,7 @@ class ComputerPlayer(Player):
         best_action = None
         for action in ["div2", "add2", "sub2"]:
             super().make_move(action)
-            value = self.minimax(5, False)
+            value = self.minimax(16,False)
             super().make_move(self.opposite_action(action))
             if value > best_value:
                 best_value = value
@@ -96,6 +99,7 @@ class Game:
                 break
             self.current_player, self.other_player = self.other_player, self.current_player
         print(f"Game over! Winner: {self.winner.name}")
+
 
 
 game = Game()

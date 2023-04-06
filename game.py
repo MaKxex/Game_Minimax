@@ -1,12 +1,15 @@
+
 import random
 import math
+import exception
 
 
-actions = [1,2]
+actions = [0,1,2]
 
-
-class Player:
+class Player():
     game_score = random.randint(25,50)
+
+
     def __init__(self, name) -> None:
         self.name = name
         self.previus_action = -1
@@ -27,16 +30,15 @@ class Player:
             
         elif self.current_move == 1:
             Player.game_score += 2
+
         elif self.current_move == 2:
             Player.game_score -= 2
         
 
 class AI(Player):
-    def calc_min(self):
-        pass
-
-    def calc_max(self):
-        pass
+    def __init__(self, name) -> None:
+        super().__init__(name)
+        self.isHuman = False
 
     def minimax(self,depth, ai_turn):
         if Player.game_score == 0 or depth == 0:
@@ -46,8 +48,6 @@ class AI(Player):
             score = -math.inf
             for operation in actions:
                 super().make_move(operation)
-                if self.previus_action == self.current_move:
-                    break
                 super().commit_move()
                 val = self.minimax(depth -1 , False)
                 score = max(score, val)
@@ -57,8 +57,6 @@ class AI(Player):
             score = +math.inf
             for operation in actions:
                 super().make_move(operation)
-                if self.previus_action == self.current_move:
-                    break
                 super().commit_move()
                 val = self.minimax(depth -1 , True)
                 score = min(score, val)
@@ -71,15 +69,13 @@ class AI(Player):
         # print(game_score)
         for operation in actions:
             super().make_move(operation)
-            val = self.minimax(15,False)
-            # if self.previus_action == self.current_move:
-            #     return -math.inf
+            val = self.minimax(5,False)
             super().commit_move()
+            print(val)
             if val > score:
                 score = val
                 best_operation = operation
-        # print(game_score)
-        # print(best_operation)
+
         Player.game_score = game_score
         super().make_move(best_operation)
 
@@ -93,50 +89,81 @@ class AI(Player):
 class Human(Player):
     def __init__(self, name) -> None:
         super().__init__(name)
+        self.isHuman = True
 
     def make_move(self):
+        flag = True
+        while flag:
+            try:
+                self._make_move(int(input("Выбери действие(0 - Делить на 2, 1 - Плюс 2, 2 - Минус 2): ")))
+            except exception.IncorecctAction as IA:
+                continue
+
+            except exception.UsedActionTwice as UAT:
+                continue
+            flag= False
+
+    def _make_move(self, action_from:int):
         print(self.name + " Твой ход!")
         action = -1
-        while action < 0 or action > 2:
-            try:
-                action = int(input("Выбери действие(0 - Делить на 2, 1 - Плюс 2, 2 - Минус 2): "))
-                super().make_move(action)
-                # print("asd")
-                if self.current_move == self.previus_action:
-                    print("Нельзя использовать эту команду дважды!")
-                    raise Exception
-                
-                super().commit_move()
-            except Exception as e:
-                pass
+
+        if  action_from > 3 or action_from < 0:
+            raise exception.IncorecctAction
+
+        action = action_from
+        super().make_move(action)
+        if self.current_move == self.previus_action:
+            print("Нельзя использовать эту команду дважды!")
+            raise exception.UsedActionTwice
+        
+        super().commit_move()
 
 
 class Game:
     def __init__(self) -> None:
-        self.players = [Human("player 1"), Human("Comp 2")]
+        self.players = []
 
 
+    def createHumanPlayer(self, name):
+        return Human(name)
+
+    def createAiPlayer(self,name):
+        return AI(name)
+
+
+    def switch_turn(self):
+        self.players.reverse()
+        # current_player, second_player = second_player, current_player
+
+    def winner(self):
+        print(self.players[0].name + " Ты выйграл!!!")
+
+
+    def isGameOver(self):
+        if Player.game_score == 0:
+            return True
+
+    def getGameScore(self):
+        return Player.game_score
     
-    def play(self):
+    def getCurrentPlayer(self) -> Player:
+        return self.players[0]
+
+
+    def play(self): # terminal use 
         flag = True
-
-        current_player = self.players[0]
-        second_player = self.players[1]
-
-
         while flag:
 
             print("|" + "Игровой счет: " + str(Player.game_score)+ "|")
-
             print("------------------")
-            current_player.make_move()
-
-            if Player.game_score == 0:
+            self.getCurrentPlayer().make_move()
+            
+            if self.isGameOver():
                 flag = False
-                break
 
-            current_player, second_player = second_player, current_player
-
-        print(current_player.name + " Ты выйграл!!!")
+            self.switch_turn()
+        self.winner()
         
-Game().play()
+
+if __name__ == "__main__":
+    Game().play()

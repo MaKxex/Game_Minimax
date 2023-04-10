@@ -2,8 +2,9 @@ import time
 from tkinter import Frame, Tk, Label, Button, LabelFrame,Radiobutton, IntVar, Entry
 import webbrowser
 from game import Game
+import exception
 
-WINDOW_SIZE = [200,280]
+WINDOW_SIZE = 500
 
 class gui:
 
@@ -16,8 +17,8 @@ class gui:
         self.root.mainloop()
 
     def config(self):
-        self.width = WINDOW_SIZE[0]
-        self.height = WINDOW_SIZE[1]
+        self.width = WINDOW_SIZE
+        self.height = WINDOW_SIZE
         self.root.geometry(str(self.width) + "x" + str(self.height))
         self.root.title("Game")
         self.frame = Frame(self.root)
@@ -65,25 +66,26 @@ class gui:
             players.append(self.game_logic.createHumanPlayer("Player 2"))
         else:
             players.append(self.game_logic.createHumanPlayer("Player 1"))
+            # players.append(self.game_logic.createAiPlayer("AI 1"))
             players.append(self.game_logic.createAiPlayer("AI"))
         self.game_logic.players = players
 
         self.base_window()
             
 
-    def input_handle(self, event):
-        self.game_logic.getCurrentPlayer()._make_move(int(self.inputF.get()))
-        self.game_logic.switch_turn()
-        self.base_window()
-
 
     def base_window(self):
         self.clearFrame()
 
+        print(self.game_logic.players)
+
+
         if self.game_logic.getGameScore() == 0:
-            Label(self.frame, text=f"Congratulations {self.game_logic.players[0].name} won!!!").pack(padx=10, pady=10)
+            Label(self.frame, text=f"Congratulations {self.game_logic.players[1].name} won!!!").pack(padx=10, pady=10)
             Button(self.frame, text="Back to menu", command=self.start_page).pack(padx=10, pady=10)
-        else:
+        else:   
+
+            print(self.game_logic.getGameScore())
             game_score = self.game_logic.getGameScore()
             player_name = self.game_logic.getCurrentPlayer().name
 
@@ -96,18 +98,35 @@ class gui:
             if not self.game_logic.getCurrentPlayer().isHuman:
                 self.AI_turn()
             else:
-                self.inputF = Entry(self.frame)
-                self.inputF.pack(padx=10, pady=10)
-                self.inputF.bind("<Return>", self.input_handle)
-                self.inputF.focus_set()
-                Button(self.frame, text="Back to menu", command=self.start_page).pack(padx=10, pady=10)
+                try:
+                    Button(self.frame, text="sub 4", command=self.div2).pack(padx=10, pady=10)
+                    Button(self.frame, text="add 2", command=self.add2).pack(padx=10, pady=10)
+                    Button(self.frame, text="sub 3", command=self.sub2).pack(padx=10, pady=10)
+                except exception.UsedActionTwice as UAT:
+                    Label(self.frame, text="Use another acrion").pack(padx=10, pady=10)
 
 
     def AI_turn(self):
-        self.game_logic.getCurrentPlayer()._make_move()
+        self.game_logic.getCurrentPlayer().make_move()
         self.game_logic.switch_turn()
         self.base_window()
 
+    def div2(self):
+        self.game_logic.getCurrentPlayer()._make_move(0)
+        self.game_logic.switch_turn()
+        self.base_window()
+
+
+    def add2(self):
+        self.game_logic.getCurrentPlayer()._make_move(1)
+        self.game_logic.switch_turn()
+        self.base_window()
+
+
+    def sub2(self):
+        self.game_logic.getCurrentPlayer()._make_move(2)
+        self.game_logic.switch_turn()
+        self.base_window()
 
 
 if __name__ == "__main__":

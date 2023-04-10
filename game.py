@@ -4,10 +4,13 @@ import math
 import exception
 
 
-actions = [0,1,2]
-
 class Player():
-    game_score = random.randint(25,50)
+    game_score = random.randint(60,73)
+
+    @staticmethod
+    def reset_game_score():
+        Player.game_score = random.randint(60,73)
+
 
 
     def __init__(self, name) -> None:
@@ -21,68 +24,81 @@ class Player():
 
     def commit_move(self):
         self.previus_action = self.current_move
-        if self.current_move == 0:
-                
-            Player.game_score //= 2
+        Player.game_score -= self.current_move
 
-            if(Player.game_score == 0):
-                Player.game_score = 1
-            
-        elif self.current_move == 1:
-            Player.game_score += 2
-
-        elif self.current_move == 2:
-            Player.game_score -= 2
         
 
 class AI(Player):
     def __init__(self, name) -> None:
         super().__init__(name)
         self.isHuman = False
+        
+    def score(self, ai_turn):
+        if ai_turn:
+            return 10
+        else:
+            return - 10                       
+    
+
+    def get_prime_divisors(self,n): #find divisors 
+        i = 2
+        while i * i <= n:
+            if n % i == 0:
+                n /= i
+                yield i
+            else:
+                i += 1
+
+        if n > 1:
+            yield int(n)
+
 
     def minimax(self,depth, ai_turn):
-        if Player.game_score == 0 or depth == 0:
-            return Player.game_score
-        
+        if Player.game_score == 0:
+            return self.score(ai_turn)
+
+
         if ai_turn: 
             score = -math.inf
-            for operation in actions:
+            for operation in self.get_prime_divisors(Player.game_score):
                 super().make_move(operation)
                 super().commit_move()
-                val = self.minimax(depth -1 , False)
-                score = max(score, val)
+                val = self.minimax(depth - 1 , False)
+                score = min(score, val)
             return score
         
         else:
             score = +math.inf
-            for operation in actions:
+            for operation in self.get_prime_divisors(Player.game_score):
                 super().make_move(operation)
                 super().commit_move()
-                val = self.minimax(depth -1 , True)
-                score = min(score, val)
+                val = self.minimax(depth - 1 , True)
+                # print(val)
+                score = max(score, val)
             return score
-
+        
     def make_move(self):
+        print(f"{self.name} выбирает {self._make_move()}" )
+
+    def _make_move(self):
         score = -math.inf
         best_operation = None
         game_score = Player.game_score
-        # print(game_score)
-        for operation in actions:
+
+        for operation in self.get_prime_divisors(Player.game_score):
             super().make_move(operation)
-            val = self.minimax(5,False)
+            val = self.minimax(10,False)
+            # print("val внешний: " + str(val))
             super().commit_move()
-            print(val)
             if val > score:
                 score = val
                 best_operation = operation
 
         Player.game_score = game_score
         super().make_move(best_operation)
-
         super().commit_move()
+        return best_operation
 
-
-        print(f"{self.name} выбирает {best_operation}" )
 
 
 
@@ -95,26 +111,24 @@ class Human(Player):
         flag = True
         while flag:
             try:
-                self._make_move(int(input("Выбери действие(0 - Делить на 2, 1 - Плюс 2, 2 - Минус 2): ")))
+                self._make_move(int(input("Введите положительный делитель счета (в том числе единицу или на само это число счета): ")))
             except exception.IncorecctAction as IA:
                 continue
 
-            except exception.UsedActionTwice as UAT:
-                continue
             flag= False
 
     def _make_move(self, action_from:int):
-        print(self.name + " Твой ход!")
         action = -1
 
-        if  action_from > 3 or action_from < 0:
+        if action_from == 0 or Player.game_score % action_from != 0:
             raise exception.IncorecctAction
 
         action = action_from
         super().make_move(action)
-        if self.current_move == self.previus_action:
-            print("Нельзя использовать эту команду дважды!")
-            raise exception.UsedActionTwice
+
+        # if self.current_move == self.previus_action:
+        #     print("Нельзя использовать эту команду дважды!")
+        #     raise exception.UsedActionTwice
         
         super().commit_move()
 
@@ -122,6 +136,11 @@ class Human(Player):
 class Game:
     def __init__(self) -> None:
         self.players = []
+
+
+    def reset(self):
+        self.players = []
+        Player.reset_game_score()
 
 
     def createHumanPlayer(self, name):
@@ -135,10 +154,6 @@ class Game:
         self.players.reverse()
         # current_player, second_player = second_player, current_player
 
-    def winner(self):
-        print(self.players[0].name + " Ты выйграл!!!")
-
-
     def isGameOver(self):
         if Player.game_score == 0:
             return True
@@ -150,20 +165,61 @@ class Game:
         return self.players[0]
 
 
+
+
+class Terminal_play:
+    def __init__(self) -> None:
+        self.game_logic = Game()
+
+
+    def ask_mode(self):
+        val = -1
+        while val < 0 or val > 1:
+            val = int(input("Выберите режим игры (0 - Человек с Человеком, 1 - Человек с AI): "))
+
+        self.set_players(val)
+
+    def winner(self):
+        print(self.game_logic.getCurrentPlayer().name+ " Ты выйграл!!!")
+
+    def set_players(self, mode:int):
+        players = []
+        
+        if mode == 0:
+            players.append(self.game_logic.createHumanPlayer("Player 1"))
+            players.append(self.game_logic.createHumanPlayer("Player 2"))
+        else:
+            players.append(self.game_logic.createHumanPlayer("Player 1"))
+            players.append(self.game_logic.createAiPlayer("AI"))
+
+
+        self.game_logic.players = players
+
+
     def play(self): # terminal use 
         flag = True
-        while flag:
 
-            print("|" + "Игровой счет: " + str(Player.game_score)+ "|")
+        self.ask_mode()
+
+        while flag:
             print("------------------")
-            self.getCurrentPlayer().make_move()
-            
-            if self.isGameOver():
+            print(self.game_logic.getCurrentPlayer().name + " Твой ход!")
+            print("|" + "Игровой счет: " + str(Player.game_score)+ "|")
+
+            if self.game_logic.getCurrentPlayer().isHuman:
+                self.game_logic.getCurrentPlayer().make_move()
+
+            else:
+                self.game_logic.getCurrentPlayer().make_move()
+            if self.game_logic.getGameScore() == 0:
                 flag = False
 
-            self.switch_turn()
+            self.game_logic.switch_turn()
+        
         self.winner()
+
+
         
 
 if __name__ == "__main__":
-    Game().play()
+    Terminal_play().play()

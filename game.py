@@ -11,8 +11,6 @@ class Player():
     def reset_game_score():
         Player.game_score = random.randint(60,73)
 
-
-
     def __init__(self, name) -> None:
         self.name = name
         self.previus_action = -1
@@ -36,6 +34,7 @@ class AI(Player):
     def score(self, ai_turn):
         if ai_turn:
             return 10
+        
         else:
             return - 10                       
     
@@ -49,21 +48,20 @@ class AI(Player):
             else:
                 i += 1
 
-        if n > 1:
+        if n > 1: #I know the rules say you can use a divisor of 1, but that would be really boring.
             yield int(n)
 
 
-    def minimax(self,depth, ai_turn):
+    def minimax(self,ai_turn):
         if Player.game_score == 0:
             return self.score(ai_turn)
-
 
         if ai_turn: 
             score = -math.inf
             for operation in self.get_prime_divisors(Player.game_score):
                 super().make_move(operation)
                 super().commit_move()
-                val = self.minimax(depth - 1 , False)
+                val = self.minimax(False)
                 score = min(score, val)
             return score
         
@@ -72,8 +70,7 @@ class AI(Player):
             for operation in self.get_prime_divisors(Player.game_score):
                 super().make_move(operation)
                 super().commit_move()
-                val = self.minimax(depth - 1 , True)
-                # print(val)
+                val = self.minimax(True)
                 score = max(score, val)
             return score
         
@@ -87,8 +84,7 @@ class AI(Player):
 
         for operation in self.get_prime_divisors(Player.game_score):
             super().make_move(operation)
-            val = self.minimax(10,False)
-            # print("val внешний: " + str(val))
+            val = self.minimax(False)
             super().commit_move()
             if val > score:
                 score = val
@@ -125,11 +121,6 @@ class Human(Player):
 
         action = action_from
         super().make_move(action)
-
-        # if self.current_move == self.previus_action:
-        #     print("Нельзя использовать эту команду дважды!")
-        #     raise exception.UsedActionTwice
-        
         super().commit_move()
 
 
@@ -149,10 +140,8 @@ class Game:
     def createAiPlayer(self,name):
         return AI(name)
 
-
     def switch_turn(self):
         self.players.reverse()
-        # current_player, second_player = second_player, current_player
 
     def isGameOver(self):
         if Player.game_score == 0:
@@ -165,8 +154,6 @@ class Game:
         return self.players[0]
 
 
-
-
 class Terminal_play:
     def __init__(self) -> None:
         self.game_logic = Game()
@@ -176,7 +163,6 @@ class Terminal_play:
         val = -1
         while val < 0 or val > 1:
             val = int(input("Выберите режим игры (0 - Человек с Человеком, 1 - Человек с AI): "))
-
         self.set_players(val)
 
     def winner(self):
@@ -195,7 +181,6 @@ class Terminal_play:
 
         self.game_logic.players = players
 
-
     def play(self): # terminal use 
         flag = True
 
@@ -208,14 +193,13 @@ class Terminal_play:
 
             if self.game_logic.getCurrentPlayer().isHuman:
                 self.game_logic.getCurrentPlayer().make_move()
-
             else:
                 self.game_logic.getCurrentPlayer().make_move()
+
             if self.game_logic.getGameScore() == 0:
                 flag = False
 
             self.game_logic.switch_turn()
-        
         self.winner()
 
 

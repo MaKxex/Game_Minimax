@@ -4,12 +4,30 @@ import math
 import exception
 
 
+
+def check(n):
+    lst = []
+    for i in range(1, int(n / 2) + 1):
+        if n % i == 0 and i > 1:
+            lst.append(i)
+    lst.append(i)
+    return lst
+
+def gen_score():
+    flag = True
+    while flag:
+        val = random.randint(60,73)
+        if len(check(val)) > 1:
+            flag = False
+    return val
+
+
 class Player():
-    game_score = random.randint(60,73)
+    game_score = gen_score()
 
     @staticmethod
     def reset_game_score():
-        Player.game_score = random.randint(60,73)
+        Player.game_score = gen_score()
 
     def __init__(self, name) -> None:
         self.name = name
@@ -33,23 +51,16 @@ class AI(Player):
         
     def score(self, ai_turn):
         if ai_turn:
-            return 10
-        
+            return - 10
         else:
-            return - 10                       
+            return 10                   
     
 
     def get_prime_divisors(self,n): #find divisors 
-        i = 2
-        while i * i <= n:
-            if n % i == 0:
-                n /= i
+        for i in range(1, int(n / 2) + 1):
+            if n % i == 0 and i > 1:
                 yield i
-            else:
-                i += 1
-
-        if n > 1: #I know the rules say you can use a divisor of 1, but that would be really boring.
-            yield int(n)
+        yield n
 
 
     def minimax(self,ai_turn):
@@ -62,7 +73,7 @@ class AI(Player):
                 super().make_move(operation)
                 super().commit_move()
                 val = self.minimax(False)
-                score = min(score, val)
+                score = max(score, val)
             return score
         
         else:
@@ -71,7 +82,7 @@ class AI(Player):
                 super().make_move(operation)
                 super().commit_move()
                 val = self.minimax(True)
-                score = max(score, val)
+                score = min(score, val)
             return score
         
     def make_move(self):
@@ -96,8 +107,6 @@ class AI(Player):
         return best_operation
 
 
-
-
 class Human(Player):
     def __init__(self, name) -> None:
         super().__init__(name)
@@ -116,7 +125,7 @@ class Human(Player):
     def _make_move(self, action_from:int):
         action = -1
 
-        if action_from == 0 or Player.game_score % action_from != 0:
+        if action_from == 0 or Player.game_score % action_from != 0 or action_from == 1:
             raise exception.IncorecctAction
 
         action = action_from

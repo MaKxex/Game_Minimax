@@ -3,7 +3,7 @@ from tkinter import Frame, Tk, Label, Button, LabelFrame,Radiobutton, IntVar, En
 import webbrowser
 from game import Game
 
-WINDOW_SIZE = [200,280]
+WINDOW_SIZE = [200,290]
 
 class gui:
 
@@ -28,6 +28,7 @@ class gui:
             widgets.destroy()
 
     def start_page(self):
+        self.root.geometry(str(self.width) + "x" + str(self.height))
         self.clearFrame()
         self.game_logic.reset()
 
@@ -50,7 +51,8 @@ class gui:
         self.clearFrame()
         print(self.game_mode.get())
         lf = LabelFrame(self.frame, text="Rules")
-        Label(lf,text="adwwadawdadw").pack(padx=10, pady=10)
+        self.root.geometry(str(500) + "x" + str(500))
+        Label(lf,text="The game generates a score around 60,\n and players are allowed to make moves by decreasing a\n number by any of its positive integer divisors.\n Each time a player makes a move, he chooses a \ndivisor of the number and reduces it by that divisor. \nThe player who cannot make a move loses. \nThe goal of the game is to stay in the game as long as possible, \navoiding situations that could lead to defeat.").pack(padx=10, pady=10)
         Button(lf, text="Back to menu", command=self.start_page).pack(padx=10, pady=10)
         lf.place(anchor="c", relx=.5, rely=.5)
 
@@ -60,18 +62,29 @@ class gui:
 
         players = []
 
-        if self.game_mode.get() == 0:
-            players.append(self.game_logic.createHumanPlayer("Player 1"))
-            players.append(self.game_logic.createHumanPlayer("Player 2"))
-        else:
-            players.append(self.game_logic.createHumanPlayer("Player 1"))
-            players.append(self.game_logic.createAiPlayer("AI"))
-        self.game_logic.players = players
+        if len(self.game_logic.players) == 0:
+            if self.game_mode.get() == 0:
+                players.append(self.game_logic.createHumanPlayer("Player 1"))
+                players.append(self.game_logic.createHumanPlayer("Player 2"))
+            else:
+                players.append(self.game_logic.createHumanPlayer("Human"))
+                players.append(self.game_logic.createAiPlayer("AI"))
 
-        self.base_window()
+            self.game_logic.players = players
+
+        Label(self.frame, text=f"First Turn: {self.game_logic.players[0].name}").pack(padx=10, pady=10)
+        Button(self.frame, text=f"Change first move", command=self.revers_turn).pack(padx=10, pady=10)
+        Button(self.frame, text=f"Back", command=self.start_page).pack(padx=10, pady=10)
+        Button(self.frame, text=f"Play", command=self.base_window).pack(padx=10, pady=10)
             
+    def revers_turn(self):
+        self.game_logic.players.reverse()
+        self.set_name()
+        
+
 
     def input_handle(self, event):
+
         self.game_logic.getCurrentPlayer()._make_move(int(self.inputF.get()))
         self.game_logic.switch_turn()
         self.base_window()
@@ -91,6 +104,15 @@ class gui:
             Label(self.frame, text=f"{game_score}").pack(padx=10, pady=10)
 
             Label(self.frame, text=f"{player_name} turns").pack(padx=10, pady=10)
+
+
+            if False in [x.isHuman for x in self.game_logic.players]:
+                if self.game_logic.getCurrentPlayer().isHuman:
+                    turn = "None"
+                    if self.game_logic.players[1].previus_action != -1:
+                        turn = self.game_logic.players[1].previus_action
+                    Label(self.frame, text=f"Last AI turn: {turn}").pack(padx=10, pady=10)
+           
             Label(self.frame, text="choose action").pack(padx=10, pady=10)
             
             if not self.game_logic.getCurrentPlayer().isHuman:
